@@ -29,20 +29,63 @@ class userController extends base_controller_1.BaseController {
         express.use('/user', this.router);
     }
     init() {
+        this.router.post('/register', helper_1.obj.upload.single('profile_image'), this.registerUser);
         this.router.post('/login', this.login);
-        this.router.post('/', helper_1.obj.verify_Token, this.userAdd);
+        this.router.post('/', helper_1.obj.verify_Token, helper_1.obj.verify_Admin, this.userAdd);
         this.router.get('/', helper_1.obj.verify_Token, this.userView);
-        this.router.delete('/', helper_1.obj.verify_Token, this.userDelete);
-        this.router.put('/', helper_1.obj.verify_Token, this.userUpdate);
+        this.router.delete('/', helper_1.obj.verify_Token, helper_1.obj.verify_Admin, this.userDelete);
+        this.router.put('/', helper_1.obj.verify_Token, helper_1.obj.upload.single('profile_image'), this.userUpdate);
+    }
+    registerUser(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log("registerUser");
+            const result = joi_1.default.validate(req.body, user_validation_1.registerSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
+                var query = { email: data.email };
+                user_model_1.users.findOne(query, function (err, result) {
+                    if (result != null && data.email === result.email) {
+                        res.send("Invalid email !!!");
+                    }
+                    else {
+                        var numSaltRounds = 10;
+                        bcrypt_1.default.genSalt(numSaltRounds, function (err, salt) {
+                            return __awaiter(this, void 0, void 0, function* () {
+                                bcrypt_1.default.hash(req.body.password, numSaltRounds, function (err, hash) {
+                                    var isAdmin = req.body.is_admin ? "admin" : "user";
+                                    var updatedBy = req.body.is_admin ? "admin" : "user";
+                                    var add = user_model_1.users.insertMany({ name: req.body.name, email: req.body.email, password: hash, created_by: isAdmin, is_admin: req.body.is_admin, profile_image: req.file.path, updated_by: updatedBy });
+                                    res.send("Registration Successfull !!!");
+                                });
+                            });
+                        });
+                    }
+                });
+            })).catch((e) => {
+                res.send(e.details[0].message);
+            });
+        });
     }
     login(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("login");
             const result = joi_1.default.validate(req.body, user_validation_1.userSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
-                jsonwebtoken_1.default.sign({ email: req.body.email, password: req.body.password }, 'secretkey', { expiresIn: '1h' }, (error, token) => {
-                    res.json({
-                        token: token
-                    });
+                var query = { email: data.email, is_active: true };
+                user_model_1.users.findOne(query, function (err, result) {
+                    if (result === null) {
+                        res.send("Un-registered user,Invalid-Email,In-active user");
+                    }
+                    else {
+                        var same = bcrypt_1.default.compareSync(data.password, result.password);
+                        if (same) {
+                            jsonwebtoken_1.default.sign({ _id: result._id, email: result.email, is_admin: result.is_admin }, 'secretkey', { expiresIn: '1h' }, (error, token) => {
+                                res.json({
+                                    token: token
+                                });
+                            });
+                        }
+                        else {
+                            res.send("Invalid-Password");
+                        }
+                    }
                 });
             })).catch((e) => {
                 console.log(e);
@@ -53,17 +96,19 @@ class userController extends base_controller_1.BaseController {
     userAdd(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("userAdd");
-            var timestamp = Date.now();
-            const result = joi_1.default.validate(req.body, user_validation_1.userSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
+            const result = joi_1.default.validate(req.body, user_validation_1.registerSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
                 var numSaltRounds = 10;
                 bcrypt_1.default.genSalt(numSaltRounds, yield function (err, salt) {
                     return __awaiter(this, void 0, void 0, function* () {
-                        bcrypt_1.default.hash('req.body.password', salt, yield function (err, hash) {
+                        bcrypt_1.default.hash(req.body.password, salt, yield function (err, hash) {
                             console.log(hash);
-                            var add = user_model_1.users.insertMany({ name: req.body.name, email: req.body.email, password: req.body.password, created_at: timestamp, created_by: name, updated_at: timestamp, updated_by: name });
+                            var add = user_model_1.users.insertMany({ name: req.body.name, email: req.body.email, password: hash, is_admin: req.body.is_admin, created_by: "admin" });
                         });
                     });
                 });
+                var view = yield user_model_1.users.find({}).then((data) => __awaiter(this, void 0, void 0, function* () {
+                    res.send(data);
+                }));
             })).catch((e) => {
                 console.log(e);
                 res.send(e.details[0].message);
@@ -72,17 +117,25 @@ class userController extends base_controller_1.BaseController {
     }
     userView(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(req.body.loginUser);
             console.log("userView");
-            var view = yield user_model_1.users.find({}).then((data) => __awaiter(this, void 0, void 0, function* () {
-                res.send(data);
-            }));
+            var admin = req.body.loginuser.is_admin;
+            if (admin) {
+                var view = yield user_model_1.users.find({}).then((data) => __awaiter(this, void 0, void 0, function* () {
+                    res.send(data);
+                }));
+            }
+            else {
+                var query = { _id: req.body.loginuser._id };
+                user_model_1.users.findOne(query, function (err, result) {
+                    res.send(result);
+                });
+            }
         });
     }
     userDelete(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("userDelete");
-            var del = yield user_model_1.users.deleteMany({ email: req.body.email });
+            var del = yield user_model_1.users.deleteMany({ _id: req.body._id });
             res.send(yield user_model_1.users.find({}).then((data) => __awaiter(this, void 0, void 0, function* () {
                 res.send(data);
             })));
@@ -91,14 +144,49 @@ class userController extends base_controller_1.BaseController {
     userUpdate(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("userUpdate");
-            const result = joi_1.default.validate(req.body, user_validation_1.userSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
-                var update = yield user_model_1.users.update({ email: req.body.email }, { password: req.body.password });
-                res.send(yield user_model_1.users.find({}).then((data) => __awaiter(this, void 0, void 0, function* () {
-                    res.send(data);
-                })));
+            console.log(req.body);
+            const result = joi_1.default.validate(req.body, user_validation_1.updateSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
+                var myquery = req.body.loginuser.is_admin ? { _id: req.body._id } : { _id: req.body.loginuser._id };
+                if (req.file) {
+                    console.log(req.file);
+                    user_model_1.users.updateOne(myquery, { profile_image: req.file.path }, (err, results) => {
+                    });
+                }
+                if (req.body.loginuser.is_admin === false) {
+                    req.body.is_active = true;
+                }
+                if (req.body.password) {
+                    var numSaltRounds = 10;
+                    bcrypt_1.default.genSalt(numSaltRounds, yield function (err, salt) {
+                        return __awaiter(this, void 0, void 0, function* () {
+                            bcrypt_1.default.hash(req.body.password, salt, yield function (err, hash) {
+                                req.body.password = hash;
+                                user_model_1.users.updateOne(myquery, req.body, (err, results) => {
+                                });
+                            });
+                        });
+                    });
+                }
+                else {
+                    user_model_1.users.updateOne(myquery, req.body, (err, results) => {
+                    });
+                }
             })).catch((e) => {
+                console.log(e);
                 res.send(e.details[0].message);
             });
+            var admin = req.body.loginuser.is_admin;
+            if (admin) {
+                var view = yield user_model_1.users.find({}).then((data) => __awaiter(this, void 0, void 0, function* () {
+                    res.send(data);
+                }));
+            }
+            else {
+                var query = { _id: req.body.loginuser._id };
+                user_model_1.users.findOne(query, function (err, result) {
+                    res.send(result);
+                });
+            }
         });
     }
 }

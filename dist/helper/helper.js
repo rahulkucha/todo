@@ -12,23 +12,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const multer_1 = __importDefault(require("multer"));
 class verifyToken {
+    constructor() {
+        this.upload = multer_1.default({ storage: this.getStorage(), fileFilter: this.fileFilter });
+    }
     verify_Token(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const bearerHeader = req.headers['authorization'];
             if (typeof bearerHeader !== 'undefined') {
-                // const bearer = bearerHeader.split(' ');
                 const bearerToken = bearerHeader;
-                // req.token = bearerToken;
-                yield jsonwebtoken_1.default.verify(bearerToken, 'secretkey', (err, authData) => {
+                const temp = yield jsonwebtoken_1.default.verify(bearerToken, 'secretkey', (err, authData) => {
                     if (err) {
                         res.sendStatus(403);
                     }
                     else {
-                        req.body.loginUser = authData;
-                        // res.send(await users.find({}).then(async data => {
-                        // res.send(data);
-                        // }));
+                        req.body.loginuser = authData;
                     }
                 });
                 next();
@@ -37,6 +36,36 @@ class verifyToken {
                 res.sendStatus(403);
             }
         });
+    }
+    getStorage() {
+        return multer_1.default.diskStorage({
+            destination: function (req, file, cb) {
+                cb(null, './uploads/');
+            },
+            filename: function (req, file, cb) {
+                var timestamp = Date.now();
+                cb(null, timestamp + file.originalname);
+            }
+        });
+    }
+    verify_Admin(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var admin = req.body.loginuser.is_admin;
+            if (admin) {
+                next();
+            }
+            else {
+                res.send("Not Allowed !!!");
+            }
+        });
+    }
+    fileFilter(req, file, cb) {
+        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg' || file.mimetype === 'image/png') {
+            cb(null, true);
+        }
+        else {
+            cb(new Error('Invalid file format'), false);
+        }
     }
 }
 exports.default = verifyToken;

@@ -1,14 +1,14 @@
 //var express = require('express');
 import {Request,Response,Application} from 'express';
 import { BaseController } from '../base.controller';
-import { todos,tasks } from './todo.model';
+import { todos } from './todo.model';
 import { TodoSchema } from './todo.validation';
 import Joi, { ValidationError } from 'joi';
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/todo', {useNewUrlParser: true});
 
 
-export default class TodoController extends BaseController{
+export default class todoController extends BaseController{
     constructor(){
         super();
         this.init();

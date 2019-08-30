@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
-import { join } from "path";
-import { any, boolean } from "joi";
 
 const userSchema = new mongoose.Schema({
-    name: String,
-    email: String,
-    password: String,
+    name: { type: String },
+    email: { type: String, unique: true, required: true },
+    password: { type: String, required: true },
     is_admin: { type: Boolean, default: false },
-    created_at: { type: Date, default: Date.now },
-    created_by: { type: String, default: name },
-    updated_at: { type: Date, default: Date.now },
-    updated_by: { type: String, default: name }
+    is_active: { type: Boolean, default: true },
+    profile_image: { type: String, default: null },
+    created_at: { type: Date, default: Date.now},
+    created_by: { type: String },
+    updated_at: { type: Date, default: Date.now},
+    updated_by: { type: String }
 });
 
 var users = mongoose.model('users', userSchema);
