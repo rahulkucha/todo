@@ -2,7 +2,7 @@ import {Request,Response,Application} from 'express';
 import { BaseController } from '../base.controller';
 import { users } from './user.model';
 import jwt from 'jsonwebtoken';
-import { obj } from '../../helper/helper';
+import { obj , verifyToken } from '../../helper/helper';
 import { userSchema, registerSchema, updateSchema } from './user.validation';
 import Joi, { ValidationError } from 'joi';
 import { getMaxListeners } from 'cluster';
@@ -23,12 +23,12 @@ export default class userController extends BaseController{
     }   
 
     public init(): void {
-        this.router.post('/register',obj.upload.single('profile_image'),this.registerUser);
+        this.router.post('/register',verifyToken.isFile().single('profile_image'),this.registerUser);
         this.router.post('/login',this.login);
         this.router.post('/',obj.verify_Token,obj.verify_Admin,this.userAdd);
         this.router.get('/',obj.verify_Token,this.userView);
         this.router.delete('/',obj.verify_Token,obj.verify_Admin,this.userDelete);
-        this.router.put('/',obj.verify_Token,obj.upload.single('profile_image'),this.userUpdate);
+        this.router.put('/',obj.verify_Token,this.userUpdate);
     }
     
     async registerUser(req: Request,res: Response)
@@ -48,7 +48,7 @@ export default class userController extends BaseController{
                         bcrypt.hash(req.body.password,numSaltRounds, function(err, hash) {
                             var isAdmin = req.body.is_admin ? "admin" : "user";
                             var updatedBy = req.body.is_admin ? "admin" : "user";
-                            var add = users.insertMany({name: req.body.name, email: req.body.email, password: hash, created_by: isAdmin, is_admin: req.body.is_admin, profile_image: req.file.path, updated_by: updatedBy });
+                            var add = users.insertMany({name: req.body.name, email: req.body.email, password: hash, profile_image: req.file.path, created_by: isAdmin, is_admin: req.body.is_admin, updated_by: updatedBy });
                             res.send("Registration Successfull !!!");
                         });
                     })
@@ -64,7 +64,8 @@ export default class userController extends BaseController{
         console.log("login");
         const result = Joi.validate(req.body, userSchema).then(async data => {
             var query = {email: data.email, is_active: true };
-            users.findOne(query,function(err: Error, result: any) {
+            users.findOne(query,await function(err: Error, result: any) {
+                console.log(result);
                 if (result === null)
                 {
                     res.send("Un-registered user,Invalid-Email,In-active user");
@@ -74,7 +75,7 @@ export default class userController extends BaseController{
                     var same = bcrypt.compareSync(data.password, result.password);
                         if(same)
                         {
-                            jwt.sign({ _id: result._id,email: result.email, is_admin: result.is_admin},'secretkey', { expiresIn: '1h' } ,(error: any,token: any)=>{
+                            jwt.sign({ _id: result._id,email: result.email, is_admin: result.is_admin},'secretkey', { expiresIn: '2h' } ,(error: any,token: any)=>{
                                 res.json({
                                     token: token
                                 });
@@ -99,13 +100,11 @@ export default class userController extends BaseController{
                 var numSaltRounds = 10;
                 bcrypt.genSalt(numSaltRounds,await async function(err, salt) {
                     bcrypt.hash(req.body.password, salt, await function(err, hash) {
-                        console.log(hash);
-                        var add = users.insertMany({name: req.body.name, email: req.body.email, password: hash, is_admin: req.body.is_admin, created_by: "admin" });
+                        //console.log(hash);
+                        var add = users.insertMany({name: req.body.name, email: req.body.email, password: hash, created_by: "admin" });
                     });
                 });
-                var view = await users.find({}).then(async data => {
-                    res.send(data);
-                });
+                res.send("New user added successfully by admin");
             }).catch((e: ValidationError) => {
                     console.log(e);
                     res.send(e.details[0].message);
@@ -140,7 +139,6 @@ export default class userController extends BaseController{
 
     async userUpdate(req: Request,res: Response){
         console.log("userUpdate");
-        console.log(req.body);
         const result = Joi.validate(req.body, updateSchema).then(async data => {
             var myquery = req.body.loginuser.is_admin ? { _id: req.body._id } : { _id: req.body.loginuser._id };
             if(req.file)
@@ -149,9 +147,15 @@ export default class userController extends BaseController{
                 users.updateOne(myquery,{ profile_image: req.file.path },(err,results) => {          
                 });           
             }
-            if(req.body.loginuser.is_admin === false)
+            if(req.body.loginuser.is_admin === true)
             {
-                req.body.is_active = true;
+                users.updateOne(myquery,{ is_active: req.body.is_active, updated_by: "admin" },(err,results) => {          
+                });
+            }
+            else
+            {
+                users.updateOne(myquery,{ updated_by: "user" },(err,results) => {          
+                });
             }
             if(req.body.password)
             {
@@ -174,21 +178,6 @@ export default class userController extends BaseController{
                 console.log(e);
                 res.send(e.details[0].message);
             });
-
-            var admin = req.body.loginuser.is_admin;
-            if(admin)
-            {
-                var view = await users.find({}).then(async data => {
-                    res.send(data);
-                });
-            }
-            else
-            {
-                var query = { _id: req.body.loginuser._id };
-                users.findOne(query,function(err: Error, result: any) {
-                    res.send(result);
-                });
-            }
-
+        res.send("User updated successfully");
     }
 }

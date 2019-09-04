@@ -10,5 +10,14 @@ export const taskSchema = Joi.object().keys({
     created_by: Joi.string().trim().regex(/^[a-zA-Z]{3,10}$/),
     updated_at: Joi.number().integer(),
     updated_by: Joi.string().trim().regex(/^[a-zA-Z]{3,10}$/),
+    _id: Joi.any(),
+    loginuser: Joi.any()
+});
+
+export const updateTask = Joi.object().keys({
+    _id: Joi.any().required(),
+    name: Joi.string().trim().regex(/^[a-zA-Z0-9]{3,10}$/),
+    description: Joi.string(),
+    is_active: Joi.boolean(),
     loginuser: Joi.any()
 });

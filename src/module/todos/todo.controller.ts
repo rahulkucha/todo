@@ -1,12 +1,12 @@
-//var express = require('express');
 import {Request,Response,Application} from 'express';
 import { BaseController } from '../base.controller';
 import { todos } from './todo.model';
-import { TodoSchema } from './todo.validation';
+import { TodoSchema, updateSchema } from './todo.validation';
 import Joi, { ValidationError } from 'joi';
+import { obj } from '../../helper/helper';
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/todo', {useNewUrlParser: true});
-
+var nodemailer = require('nodemailer');
 
 export default class todoController extends BaseController{
     constructor(){
@@ -19,59 +19,93 @@ export default class todoController extends BaseController{
     }   
 
     public init(): void {
-       // this.router.get('/',this.index);
-        this.router.post('/',this.TodoInsert);
-        this.router.get('/',this.TodoView);
-        this.router.delete('/',this.TodoDelete);
-        this.router.put('/',this.TodoUpdate);
+        this.router.post('/',obj.verify_Token,this.todoInsert);
+        this.router.post('/view',obj.verify_Token,this.todoView);
+        this.router.delete('/',obj.verify_Token,this.todoDelete);
+        this.router.put('/',obj.verify_Token,this.todoUpdate);
     }
-
-    // public index(req: Request,res: Response): void{
-    //     console.log("index");
-    //     res.send("Hello World !!!");
-    // }
     
-    async TodoInsert(req: Request,res: Response) {
-        console.log("hi");
-        console.log(req.body);
+    async todoInsert(req: Request,res: Response,next: any) {
+        console.log("todoInsert");
         const result = Joi.validate(req.body, TodoSchema).then(async data => {
-             console.log(data);
-             console.log(req.body);
-             var add = await todos.insertMany([{todo: req.body.todo, todo_id: req.body.todo_id}]);   
-             console.log("TodoInsert");
-             res.send(await todos.find({}).then(async data => {
-                 res.send(data);
-             }));
-            // console.log(add);
+
+            var add = await todos.insertMany({ name: req.body.name, description: req.body.description, task_id: req.body._id, is_deleted: req.body.is_deleted });
+            if(add)
+            {
+                var transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                      user: 'youremail@gmail.com',
+                      pass: 'yourpassword'
+                    }
+                  });
+                  
+                  var mailOptions = {
+                    from: 'youremail@gmail.com',
+                    to: 'myfriend@yahoo.com',
+                    subject: 'Sending Email using Node.js',
+                    text: 'That was easy!'
+                  };
+                  
+                  transporter.sendMail(mailOptions, function(error: any, info: any){
+                    if (error) {
+                      console.log(error);
+                    } else {
+                      console.log('Email sent: ' + info.response);
+                    }
+                  });
+                res.send("New todo added successfully");
+            }   
         }).catch((e: ValidationError) => {
             console.log(e);
-           // res.json({error: e.details[0].message});
             res.send(e.details[0].message);
         });
     }
 
-    async TodoView(req: Request,res: Response){
-        var view = await todos.find({}).then(async data => {
-            res.send(data);
-        }); 
-        console.log("TodoView");
+    async todoView(req: Request,res: Response){
+        console.log("todoView");
+        var admin = req.body.loginuser.is_admin;
+            if(admin)
+            {
+                console.log("admin");
+                var query = { is_deleted: false };
+                    todos.find(query, function(err: Error, result: any) {
+                    res.send(result);
+                });
+            }
+            else
+            {
+                console.log("user");
+                var queries = { task_id: req.body._id, is_deleted: false };
+                todos.find(queries, function(err: Error, result: any) {
+                    res.send(result);
+                });
+             }
     }
 
-    async TodoDelete(req: Request,res: Response){
-        var del = await todos.deleteMany({todo_id: req.body.todo_id});
-        console.log(del);
-        res.send(await todos.find({}).then(async data => {
-            res.send(data);
-        }));
+    async todoDelete(req: Request,res: Response){
+        console.log("todoDelete");
+        var update = await todos.updateMany({ _id: req.body._id },{ is_deleted: true });
+        if(update)
+        {
+            res.send("Todo deleted successfully");
+        }
     }
 
-    async TodoUpdate(req: Request,res: Response){
-        const result = Joi.validate(req.body, TodoSchema).then(async data => {
-            var update = await todos.updateMany({todo_id: req.body.todo_id},{todo: req.body.todo});
-            console.log(update);
-            res.send(await todos.find({}).then(async data => {
-                res.send(data);
-            }));
+    async todoUpdate(req: Request,res: Response){
+        console.log("todoUpdate");
+        const result = Joi.validate(req.body, updateSchema).then(async data => {
+            // if(req.body.loginuser.is_admin === false)
+            // {
+            //     req.body.is_active = true;
+            // }
+            var myquery = { _id: req.body._id };
+            var updates = todos.updateOne(myquery,req.body,(err,results) => {
+            });
+            if(updates)
+            {
+                res.send("Todo updated successfully");
+            }
         }).catch ((e: ValidationError) => {
             res.send(e.details[0].message);        
         });
