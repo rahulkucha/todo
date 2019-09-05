@@ -6,7 +6,6 @@ import Joi, { ValidationError } from 'joi';
 import { obj } from '../../helper/helper';
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/todo', {useNewUrlParser: true});
-var nodemailer = require('nodemailer');
 
 export default class todoController extends BaseController{
     constructor(){
@@ -32,28 +31,6 @@ export default class todoController extends BaseController{
             var add = await todos.insertMany({ name: req.body.name, description: req.body.description, task_id: req.body._id, is_deleted: req.body.is_deleted });
             if(add)
             {
-                var transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                      user: 'youremail@gmail.com',
-                      pass: 'yourpassword'
-                    }
-                  });
-                  
-                  var mailOptions = {
-                    from: 'youremail@gmail.com',
-                    to: 'myfriend@yahoo.com',
-                    subject: 'Sending Email using Node.js',
-                    text: 'That was easy!'
-                  };
-                  
-                  transporter.sendMail(mailOptions, function(error: any, info: any){
-                    if (error) {
-                      console.log(error);
-                    } else {
-                      console.log('Email sent: ' + info.response);
-                    }
-                  });
                 res.send("New todo added successfully");
             }   
         }).catch((e: ValidationError) => {

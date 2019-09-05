@@ -6,7 +6,6 @@ import { taskSchema, updateTask } from './task.validation';
 import Joi, { ValidationError } from 'joi';
 import { ObjectId } from 'bson';
 import { todos } from '../todos/todo.model';
-var nodemailer = require('nodemailer');
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/todo', {useNewUrlParser: true});
@@ -35,29 +34,7 @@ export default class taskController extends BaseController{
 
             var add = await tasks.insertMany({ name: req.body.name, description: req.body.description, user_id: req.body.loginuser._id });
             if(add)
-            {
-                var transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                      user: 'youremail@gmail.com',
-                      pass: 'yourpassword'
-                    }
-                  });
-                  
-                  var mailOptions = {
-                    from: 'youremail@gmail.com',
-                    to: 'myfriend@yahoo.com',
-                    subject: 'Sending Email using Node.js',
-                    text: 'That was easy!'
-                  };
-                  
-                  transporter.sendMail(mailOptions, function(error: any, info: any){
-                    if (error) {
-                      console.log(error);
-                    } else {
-                      console.log('Email sent: ' + info.response);
-                    }
-                  });
+            {    
                 res.send("New task added successfully");
             }
         }).catch((e: ValidationError) => {

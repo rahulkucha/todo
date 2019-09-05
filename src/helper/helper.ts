@@ -2,6 +2,7 @@ import {Express,Application,Request,Response} from 'express';
 import jwt from 'jsonwebtoken';
 import { Double } from 'bson';
 import multer from 'multer';
+var nodemailer = require('nodemailer');
 
 export default class verifyToken
 {
@@ -45,6 +46,7 @@ export default class verifyToken
 
     async verify_Admin(req: Request, res: Response, next: any) {
         var admin = req.body.loginuser.is_admin;
+        console.log(admin);
         if(admin)
         {
             next();
@@ -76,6 +78,32 @@ export default class verifyToken
         {
             cb(new Error('Invalid file format'), false);
         }
+    }
+
+    async sentMail()
+    {
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: 'youremail@gmail.com',
+              pass: 'yourpassword'
+            }
+          });
+          
+          var mailOptions = {
+            from: 'youremail@gmail.com',
+            to: 'rahulkucha100@gmail.com',
+            subject: 'Sending Email using Node.js',
+            text: 'New task added'
+          };
+          
+          transporter.sendMail(mailOptions, function(error: any, info: any){
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('Email sent: ' + info.response);
+            }
+          });
     }
 }
 var obj = new verifyToken()
