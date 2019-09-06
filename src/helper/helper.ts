@@ -2,6 +2,7 @@ import {Express,Application,Request,Response} from 'express';
 import jwt from 'jsonwebtoken';
 import { Double } from 'bson';
 import multer from 'multer';
+import { users } from '../module/users/user.model';
 var nodemailer = require('nodemailer');
 
 export default class verifyToken
@@ -80,21 +81,25 @@ export default class verifyToken
         }
     }
 
-    async sentMail()
+    async sentMail(id:string)
     {
+        // console.log(id);
+        // users.findOne({_id: id},function(err,result: any){
+        //     console.log(result.email);
+        // });
         var transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-              user: 'youremail@gmail.com',
+              user: 'rahulkucha100@gmail.com',
               pass: 'yourpassword'
             }
           });
           
           var mailOptions = {
-            from: 'youremail@gmail.com',
-            to: 'rahulkucha100@gmail.com',
+            from: 'rahulkucha100@gmail.com',
+            to: 'rahulkucha100@gmail.com', // usermail,adminmail
             subject: 'Sending Email using Node.js',
-            text: 'New task added'
+            text: 'New mail arrived !!!'
           };
           
           transporter.sendMail(mailOptions, function(error: any, info: any){
@@ -105,6 +110,7 @@ export default class verifyToken
             }
           });
     }
+
 }
 var obj = new verifyToken()
 export { obj , verifyToken };

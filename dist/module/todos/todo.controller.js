@@ -18,7 +18,6 @@ const joi_1 = __importDefault(require("joi"));
 const helper_1 = require("../../helper/helper");
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/todo', { useNewUrlParser: true });
-var nodemailer = require('nodemailer');
 class todoController extends base_controller_1.BaseController {
     constructor() {
         super();
@@ -30,6 +29,9 @@ class todoController extends base_controller_1.BaseController {
     init() {
         this.router.post('/', helper_1.obj.verify_Token, this.todoInsert);
         this.router.post('/view', helper_1.obj.verify_Token, this.todoView);
+        this.router.post('/completed', helper_1.obj.verify_Token, this.completedTodoView);
+        this.router.post('/pending', helper_1.obj.verify_Token, this.pendingTodoView);
+        this.router.post('/deleted', helper_1.obj.verify_Token, this.deletedTodoView);
         this.router.delete('/', helper_1.obj.verify_Token, this.todoDelete);
         this.router.put('/', helper_1.obj.verify_Token, this.todoUpdate);
     }
@@ -39,27 +41,6 @@ class todoController extends base_controller_1.BaseController {
             const result = joi_1.default.validate(req.body, todo_validation_1.TodoSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
                 var add = yield todo_model_1.todos.insertMany({ name: req.body.name, description: req.body.description, task_id: req.body._id, is_deleted: req.body.is_deleted });
                 if (add) {
-                    var transporter = nodemailer.createTransport({
-                        service: 'gmail',
-                        auth: {
-                            user: 'youremail@gmail.com',
-                            pass: 'yourpassword'
-                        }
-                    });
-                    var mailOptions = {
-                        from: 'youremail@gmail.com',
-                        to: 'myfriend@yahoo.com',
-                        subject: 'Sending Email using Node.js',
-                        text: 'That was easy!'
-                    };
-                    transporter.sendMail(mailOptions, function (error, info) {
-                        if (error) {
-                            console.log(error);
-                        }
-                        else {
-                            console.log('Email sent: ' + info.response);
-                        }
-                    });
                     res.send("New todo added successfully");
                 }
             })).catch((e) => {
@@ -88,6 +69,66 @@ class todoController extends base_controller_1.BaseController {
             }
         });
     }
+    completedTodoView(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log("completedTodoView");
+            var admin = req.body.loginuser.is_admin;
+            if (admin) {
+                console.log("admin");
+                var query = { task_id: req.body._id, status: true, is_deleted: false };
+                todo_model_1.todos.find(query, function (err, result) {
+                    res.send(result);
+                });
+            }
+            else {
+                console.log("user");
+                var queries = { task_id: req.body._id, status: true, is_deleted: false };
+                todo_model_1.todos.find(queries, function (err, result) {
+                    res.send(result);
+                });
+            }
+        });
+    }
+    deletedTodoView(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log("deletedTodoView");
+            var admin = req.body.loginuser.is_admin;
+            if (admin) {
+                console.log("admin");
+                var query = { is_deleted: true };
+                todo_model_1.todos.find(query, function (err, result) {
+                    res.send(result);
+                });
+            }
+            else {
+                console.log("user");
+                var queries = { task_id: req.body._id, is_deleted: true };
+                todo_model_1.todos.find(queries, function (err, result) {
+                    res.send(result);
+                });
+            }
+        });
+    }
+    pendingTodoView(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log("pendingTodoView");
+            var admin = req.body.loginuser.is_admin;
+            if (admin) {
+                console.log("admin");
+                var query = { task_id: req.body._id, status: false, is_deleted: false };
+                todo_model_1.todos.find(query, function (err, result) {
+                    res.send(result);
+                });
+            }
+            else {
+                console.log("user");
+                var queries = { task_id: req.body._id, status: false, is_deleted: false };
+                todo_model_1.todos.find(queries, function (err, result) {
+                    res.send(result);
+                });
+            }
+        });
+    }
     todoDelete(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("todoDelete");
@@ -101,10 +142,6 @@ class todoController extends base_controller_1.BaseController {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("todoUpdate");
             const result = joi_1.default.validate(req.body, todo_validation_1.updateSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
-                // if(req.body.loginuser.is_admin === false)
-                // {
-                //     req.body.is_active = true;
-                // }
                 var myquery = { _id: req.body._id };
                 var updates = todo_model_1.todos.updateOne(myquery, req.body, (err, results) => {
                 });

@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const multer_1 = __importDefault(require("multer"));
+var nodemailer = require('nodemailer');
 class verifyToken {
     constructor() {
     }
@@ -52,6 +53,7 @@ class verifyToken {
     verify_Admin(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var admin = req.body.loginuser.is_admin;
+            console.log(admin);
             if (admin) {
                 next();
             }
@@ -78,6 +80,35 @@ class verifyToken {
         else {
             cb(new Error('Invalid file format'), false);
         }
+    }
+    sentMail(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // console.log(id);
+            // users.findOne({_id: id},function(err,result: any){
+            //     console.log(result.email);
+            // });
+            var transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: 'rahulkucha100@gmail.com',
+                    pass: 'yourpassword'
+                }
+            });
+            var mailOptions = {
+                from: 'rahulkucha100@gmail.com',
+                to: 'rahulkucha100@gmail.com',
+                subject: 'Sending Email using Node.js',
+                text: 'New mail arrived !!!'
+            };
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.log(error);
+                }
+                else {
+                    console.log('Email sent: ' + info.response);
+                }
+            });
+        });
     }
 }
 exports.default = verifyToken;

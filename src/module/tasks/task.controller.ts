@@ -23,7 +23,10 @@ export default class taskController extends BaseController{
 
     public init(): void {
         this.router.post('/',obj.verify_Token,this.taskInsert);
-        this.router.get('/',obj.verify_Token,this.taskView);
+        this.router.post('/view',obj.verify_Token,this.taskView);
+        this.router.post('/deleted',obj.verify_Token,this.deletedTaskView);
+        this.router.post('/completed',obj.verify_Token,this.completedTaskView);
+        this.router.post('/pending',obj.verify_Token,this.pendingTaskView);
         this.router.delete('/',obj.verify_Token,this.taskDelete,);
         this.router.put('/',obj.verify_Token,this.taskUpdate);
     }
@@ -31,16 +34,91 @@ export default class taskController extends BaseController{
     async taskInsert(req: Request,res: Response,next: any) {
         console.log("taskInsert");
         const result = Joi.validate(req.body, taskSchema).then(async data => {
+            var createdBy = req.body.loginuser.is_admin ? "admin" : "user";
+            var updatedBy = req.body.loginuser.is_admin ? "admin" : "user";
 
-            var add = await tasks.insertMany({ name: req.body.name, description: req.body.description, user_id: req.body.loginuser._id });
+            var user_id = req.body.user_id ? req.body.user_id : req.body.loginuser._id;
+
+            var add = await tasks.insertMany({ name: req.body.name, description: req.body.description, user_id: user_id, created_by: createdBy, updated_by: updatedBy });
             if(add)
             {    
+                obj.sentMail(user_id);
                 res.send("New task added successfully");
             }
         }).catch((e: ValidationError) => {
             console.log(e);
             res.send(e.details[0].message);
         });
+    }
+
+    async deletedTaskView(req: Request,res: Response){
+        console.log("deletedTaskView");
+        var admin = req.body.loginuser.is_admin;
+            if(admin)
+            {
+                console.log("admin");
+                var query = { is_deleted: true };
+                    tasks.find(query, await function(err: Error, result: any) {
+                    res.send(result);
+                });
+            }
+            else
+            {
+                console.log("user");
+                var queries = { user_id: req.body._id, is_deleted: true };
+                tasks.find(queries, await function(err: Error, result: any) {
+                    res.send(result);
+                });
+             }
+    }
+
+    async completedTaskView(req: Request,res: Response){
+        console.log("completedTaskView");
+        var admin = req.body.loginuser.is_admin;
+            if(admin)
+            {
+                console.log("admin");
+                var query = { user_id: req.body._id, status: true, is_deleted: false };
+                    todos.find(query, await function(err: Error, result: any) {
+                    res.send(result);
+                });
+            }
+            else
+            {
+                console.log("user");
+                // var checkTodo = await todos.find({task_id: req.body._id, is_deleted: false, status: true},function(err,result){
+                // });
+                var checkTodos = await todos.find({task_id: req.body._id, is_deleted: false, status: false},function(err,result){
+                });
+                if(checkTodos.length>0)
+                {
+                    var queries = { user_id: req.body._id, is_deleted: false };
+                    tasks.find(queries, await function(err: Error, result: any) {
+                        res.send(result);
+                    });
+                }
+            }
+    }
+
+    async pendingTaskView(req: Request,res: Response){
+        console.log("pendingTaskView");
+        var admin = req.body.loginuser.is_admin;
+            if(admin)
+            {
+                console.log("admin");
+                var query = { user_id: req.body._id, status: false, is_deleted: false };
+                    todos.find(query, function(err: Error, result: any) {
+                    res.send(result);
+                });
+            }
+            else
+            {
+                console.log("user");
+                var queries = { user_id: req.body._id, status: false, is_deleted: false };
+                    todos.find(queries, function(err: Error, result: any) {
+                    res.send(result);
+                });
+            }
     }
 
     async taskView(req: Request,res: Response){
@@ -66,9 +144,11 @@ export default class taskController extends BaseController{
 
     async taskDelete(req: Request,res: Response){
         console.log("taskDelete");
-        var checkToDo = await todos.find({task_id: req.body._id, is_deleted: false, status: true},function(err,result){
+        var checkTodo = await todos.find({task_id: req.body._id, is_deleted: false, status: true},function(err,result){
         });
-        if(checkToDo.length>0)
+        var checkTodos = await todos.find({task_id: req.body._id, is_deleted: false, status: false},function(err,result){
+        });
+        if(checkTodo.length>0 && checkTodos.length>0)
         {
             res.send("Task cannot be deleted since some todo of this task is completed");
         }
@@ -86,6 +166,7 @@ export default class taskController extends BaseController{
     async taskUpdate(req: Request,res: Response){
         console.log("taskUpdate");
         const result = Joi.validate(req.body, updateTask).then(async data => {
+            var updatedBy = req.body.loginuser.is_admin ? "admin" : "user";
             var myquery = { _id: req.body._id };
             var updates = tasks.updateOne(myquery,req.body,(err,results) => {
             });
