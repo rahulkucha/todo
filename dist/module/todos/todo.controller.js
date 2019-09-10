@@ -39,7 +39,7 @@ class todoController extends base_controller_1.BaseController {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("todoInsert");
             const result = joi_1.default.validate(req.body, todo_validation_1.TodoSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
-                var add = yield todo_model_1.todos.insertMany({ name: req.body.name, description: req.body.description, task_id: req.body._id, is_deleted: req.body.is_deleted });
+                var add = yield todo_model_1.todos.insertMany({ name: req.body.name, description: req.body.description, tasks: req.body._id, is_deleted: req.body.is_deleted });
                 if (add) {
                     res.send("New todo added successfully");
                 }
@@ -62,7 +62,7 @@ class todoController extends base_controller_1.BaseController {
             }
             else {
                 console.log("user");
-                var queries = { task_id: req.body._id, is_deleted: false };
+                var queries = { tasks: req.body._id, is_deleted: false };
                 todo_model_1.todos.find(queries, function (err, result) {
                     res.send(result);
                 });

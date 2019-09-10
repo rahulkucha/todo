@@ -10,7 +10,7 @@ exports.TodoSchema = joi_1.default.object().keys({
     is_active: joi_1.default.boolean(),
     is_deleted: joi_1.default.boolean(),
     status: joi_1.default.boolean(),
-    task_id: joi_1.default.string().alphanum(),
+    tasks: joi_1.default.string().alphanum(),
     created_at: joi_1.default.number().integer(),
     created_by: joi_1.default.string().trim().regex(/^[a-zA-Z]{3,10}$/),
     updated_at: joi_1.default.number().integer(),

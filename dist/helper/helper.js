@@ -63,7 +63,8 @@ class verifyToken {
         });
     }
     static isFile() {
-        return multer_1.default({ storage: multer_1.default.diskStorage({
+        return multer_1.default({
+            storage: multer_1.default.diskStorage({
                 destination: function (req, file, cb) {
                     cb(null, './uploads/');
                 },
@@ -71,7 +72,8 @@ class verifyToken {
                     var timestamp = Date.now();
                     cb(null, timestamp + file.originalname);
                 }
-            }) });
+            })
+        });
     }
     fileFilter(req, file, cb) {
         if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg' || file.mimetype === 'image/png') {
@@ -81,22 +83,19 @@ class verifyToken {
             cb(new Error('Invalid file format'), false);
         }
     }
-    sentMail(id) {
+    sentMail() {
         return __awaiter(this, void 0, void 0, function* () {
-            // console.log(id);
-            // users.findOne({_id: id},function(err,result: any){
-            //     console.log(result.email);
-            // });
+            console.log("sentMail");
             var transporter = nodemailer.createTransport({
                 service: 'gmail',
                 auth: {
-                    user: 'rahulkucha100@gmail.com',
-                    pass: 'yourpassword'
+                    user: 'rahulkucha@gmail.com',
+                    pass: ''
                 }
             });
             var mailOptions = {
-                from: 'rahulkucha100@gmail.com',
-                to: 'rahulkucha100@gmail.com',
+                from: 'rahulkucha@gmail.com',
+                to: 'rahulkucha@gmail.com',
                 subject: 'Sending Email using Node.js',
                 text: 'New mail arrived !!!'
             };

@@ -65,6 +65,7 @@ export default class userController extends BaseController{
         const result = Joi.validate(req.body, userSchema).then(async data => {
             var query = {email: data.email, is_active: true };
             users.findOne(query,await function(err: Error, result: any) {
+                //console.log(result);
                 if (result === null)
                 {
                     res.send("Un-registered user,Invalid-Email,In-active user");

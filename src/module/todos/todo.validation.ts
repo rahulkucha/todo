@@ -6,7 +6,7 @@ export const TodoSchema = Joi.object().keys({
     is_active: Joi.boolean(),
     is_deleted: Joi.boolean(),
     status: Joi.boolean(),
-    task_id: Joi.string().alphanum(),
+    tasks: Joi.string().alphanum(),
     created_at: Joi.number().integer(),
     created_by: Joi.string().trim().regex(/^[a-zA-Z]{3,10}$/),
     updated_at: Joi.number().integer(),

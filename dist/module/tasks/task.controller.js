@@ -30,8 +30,8 @@ class taskController extends base_controller_1.BaseController {
     init() {
         this.router.post('/', helper_1.obj.verify_Token, this.taskInsert);
         this.router.post('/view', helper_1.obj.verify_Token, this.taskView);
-        this.router.post('/deleted', helper_1.obj.verify_Token, this.deletedTaskView);
-        this.router.post('/completed', helper_1.obj.verify_Token, this.completedTaskView);
+        this.router.get('/deleted', helper_1.obj.verify_Token, this.deletedTaskView);
+        this.router.get('/completed', helper_1.obj.verify_Token, this.completedTaskView);
         this.router.post('/pending', helper_1.obj.verify_Token, this.pendingTaskView);
         this.router.delete('/', helper_1.obj.verify_Token, this.taskDelete);
         this.router.put('/', helper_1.obj.verify_Token, this.taskUpdate);
@@ -45,7 +45,7 @@ class taskController extends base_controller_1.BaseController {
                 var user_id = req.body.user_id ? req.body.user_id : req.body.loginuser._id;
                 var add = yield task_model_1.tasks.insertMany({ name: req.body.name, description: req.body.description, user_id: user_id, created_by: createdBy, updated_by: updatedBy });
                 if (add) {
-                    helper_1.obj.sentMail(user_id);
+                    helper_1.obj.sentMail();
                     res.send("New task added successfully");
                 }
             })).catch((e) => {
@@ -61,16 +61,14 @@ class taskController extends base_controller_1.BaseController {
             if (admin) {
                 console.log("admin");
                 var query = { is_deleted: true };
-                task_model_1.tasks.find(query, yield function (err, result) {
-                    res.send(result);
-                });
+                var deltask = yield task_model_1.tasks.find(query).populate('todolist');
+                res.send(deltask);
             }
             else {
                 console.log("user");
-                var queries = { user_id: req.body._id, is_deleted: true };
-                task_model_1.tasks.find(queries, yield function (err, result) {
-                    res.send(result);
-                });
+                var queries = { user_id: req.body.loginuser._id, is_deleted: true };
+                var deltask = yield task_model_1.tasks.find(queries).populate('todolist');
+                res.send(deltask);
             }
         });
     }
@@ -80,23 +78,27 @@ class taskController extends base_controller_1.BaseController {
             var admin = req.body.loginuser.is_admin;
             if (admin) {
                 console.log("admin");
-                var query = { user_id: req.body._id, status: true, is_deleted: false };
-                todo_model_1.todos.find(query, yield function (err, result) {
-                    res.send(result);
+                const task = yield task_model_1.tasks.find().populate({ path: 'todolist', match: { status: true } }).exec(function (err, results) {
+                    var taskarr = [];
+                    results.forEach(function (task) {
+                        if (task.todolist.length > 0) {
+                            taskarr.push(task);
+                        }
+                    });
+                    res.send(taskarr);
                 });
             }
             else {
                 console.log("user");
-                // var checkTodo = await todos.find({task_id: req.body._id, is_deleted: false, status: true},function(err,result){
-                // });
-                var checkTodos = yield todo_model_1.todos.find({ task_id: req.body._id, is_deleted: false, status: false }, function (err, result) {
-                });
-                if (checkTodos.length > 0) {
-                    var queries = { user_id: req.body._id, is_deleted: false };
-                    task_model_1.tasks.find(queries, yield function (err, result) {
-                        res.send(result);
+                const task = yield task_model_1.tasks.find({ user_id: req.body.loginuser._id, is_deleted: false }).populate({ path: 'todolist', match: { status: true } }).exec(function (err, results) {
+                    var taskarr = [];
+                    results.forEach(function (task) {
+                        if (task.todolist.length > 0) {
+                            taskarr.push(task);
+                        }
                     });
-                }
+                    res.send(taskarr);
+                });
             }
         });
     }
@@ -106,16 +108,26 @@ class taskController extends base_controller_1.BaseController {
             var admin = req.body.loginuser.is_admin;
             if (admin) {
                 console.log("admin");
-                var query = { user_id: req.body._id, status: false, is_deleted: false };
-                todo_model_1.todos.find(query, function (err, result) {
-                    res.send(result);
+                const task = yield task_model_1.tasks.find().populate({ path: 'todolist', match: { status: false } }).exec(function (err, results) {
+                    var taskarr = [];
+                    results.forEach(function (task) {
+                        if (task.todolist.length > 0) {
+                            taskarr.push(task);
+                        }
+                    });
+                    res.send(taskarr);
                 });
             }
             else {
                 console.log("user");
-                var queries = { user_id: req.body._id, status: false, is_deleted: false };
-                todo_model_1.todos.find(queries, function (err, result) {
-                    res.send(result);
+                const task = yield task_model_1.tasks.find({ user_id: req.body.loginuser._id, is_deleted: false }).populate({ path: 'todolist', match: { status: false } }).exec(function (err, results) {
+                    var taskarr = [];
+                    results.forEach(function (task) {
+                        if (task.todolist.length > 0) {
+                            taskarr.push(task);
+                        }
+                    });
+                    res.send(taskarr);
                 });
             }
         });
@@ -129,23 +141,23 @@ class taskController extends base_controller_1.BaseController {
                 var query = { is_deleted: false };
                 task_model_1.tasks.find(query, function (err, result) {
                     res.send(result);
-                });
+                }).populate('todolist');
             }
             else {
                 console.log("user");
                 var queries = { user_id: req.body.loginuser._id, is_deleted: false };
                 task_model_1.tasks.find(queries, function (err, result) {
                     res.send(result);
-                });
+                }).populate('todolist');
             }
         });
     }
     taskDelete(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("taskDelete");
-            var checkTodo = yield todo_model_1.todos.find({ task_id: req.body._id, is_deleted: false, status: true }, function (err, result) {
+            var checkTodo = yield todo_model_1.todos.find({ tasks: req.body._id, is_deleted: false, status: true }, function (err, result) {
             });
-            var checkTodos = yield todo_model_1.todos.find({ task_id: req.body._id, is_deleted: false, status: false }, function (err, result) {
+            var checkTodos = yield todo_model_1.todos.find({ tasks: req.body._id, is_deleted: false, status: false }, function (err, result) {
             });
             if (checkTodo.length > 0 && checkTodos.length > 0) {
                 res.send("Task cannot be deleted since some todo of this task is completed");
@@ -164,6 +176,7 @@ class taskController extends base_controller_1.BaseController {
             console.log("taskUpdate");
             const result = joi_1.default.validate(req.body, task_validation_1.updateTask).then((data) => __awaiter(this, void 0, void 0, function* () {
                 var updatedBy = req.body.loginuser.is_admin ? "admin" : "user";
+                req.body.updated_by = updatedBy;
                 var myquery = { _id: req.body._id };
                 var updates = task_model_1.tasks.updateOne(myquery, req.body, (err, results) => {
                 });
