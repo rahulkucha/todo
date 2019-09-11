@@ -30,6 +30,7 @@ class taskController extends base_controller_1.BaseController {
     init() {
         this.router.post('/', helper_1.obj.verify_Token, this.taskInsert);
         this.router.post('/view', helper_1.obj.verify_Token, this.taskView);
+        this.router.post('/inactive', helper_1.obj.verify_Token, this.taskInActive);
         this.router.get('/deleted', helper_1.obj.verify_Token, this.deletedTaskView);
         this.router.get('/completed', helper_1.obj.verify_Token, this.completedTaskView);
         this.router.post('/pending', helper_1.obj.verify_Token, this.pendingTaskView);
@@ -182,6 +183,23 @@ class taskController extends base_controller_1.BaseController {
                 });
                 if (updates) {
                     res.send("Task updated successfully");
+                }
+            })).catch((e) => {
+                res.send(e.details[0].message);
+            });
+        });
+    }
+    taskInActive(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log("taskInActive");
+            const result = joi_1.default.validate(req.body, task_validation_1.updateTask).then((data) => __awaiter(this, void 0, void 0, function* () {
+                const todos1 = yield todo_model_1.todos.find({ tasks: data._id, status: false }).count();
+                if (todos1 > 0) {
+                    res.send("Cannot make this task inactive,since some todos of this task are pending");
+                }
+                else {
+                    const todos1 = yield todo_model_1.todos.findOneAndUpdate({ tasks: data._id }, { $set: { is_active: false } });
+                    res.send(todos1);
                 }
             })).catch((e) => {
                 res.send(e.details[0].message);

@@ -24,6 +24,7 @@ export default class taskController extends BaseController {
     public init(): void {
         this.router.post('/', obj.verify_Token, this.taskInsert);
         this.router.post('/view', obj.verify_Token, this.taskView);
+        this.router.post('/inactive', obj.verify_Token, this.taskInActive);
         this.router.get('/deleted', obj.verify_Token, this.deletedTaskView);
         this.router.get('/completed', obj.verify_Token, this.completedTaskView);
         this.router.post('/pending', obj.verify_Token, this.pendingTaskView);
@@ -172,6 +173,22 @@ export default class taskController extends BaseController {
             });
             if (updates) {
                 res.send("Task updated successfully");
+            }
+        }).catch((e: ValidationError) => {
+            res.send(e.details[0].message);
+        });
+    }
+
+    async taskInActive(req: Request, res: Response) {
+        console.log("taskInActive");
+        const result = Joi.validate(req.body, updateTask).then(async data => {
+            const todos1 = await todos.find({ tasks: data._id, status: false }).count();
+            if (todos1 > 0) {
+                res.send("Cannot make this task inactive,since some todos of this task are pending");
+            }
+            else {
+                const todos1 = await todos.findOneAndUpdate({ tasks: data._id }, { $set: { is_active: false } });
+                res.send(todos1);
             }
         }).catch((e: ValidationError) => {
             res.send(e.details[0].message);

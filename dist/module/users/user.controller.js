@@ -33,8 +33,9 @@ class userController extends base_controller_1.BaseController {
         this.router.post('/login', this.login);
         this.router.post('/', helper_1.obj.verify_Token, helper_1.obj.verify_Admin, this.userAdd);
         this.router.get('/', helper_1.obj.verify_Token, this.userView);
+        this.router.get('/inactive', helper_1.obj.verify_Token, this.inactiveUser);
         this.router.delete('/', helper_1.obj.verify_Token, helper_1.obj.verify_Admin, this.userDelete);
-        this.router.put('/', helper_1.obj.verify_Token, this.userUpdate);
+        this.router.put('/', helper_1.verifyToken.isFile().single('profile_image'), this.userUpdate);
     }
     registerUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -131,6 +132,17 @@ class userController extends base_controller_1.BaseController {
             }
         });
     }
+    inactiveUser(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log("inactiveUser");
+            var admin = req.body.loginuser.is_admin;
+            if (admin) {
+                var view = yield user_model_1.users.find({ is_active: false }).then((data) => __awaiter(this, void 0, void 0, function* () {
+                    res.send(data);
+                }));
+            }
+        });
+    }
     userDelete(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("userDelete");
@@ -146,6 +158,7 @@ class userController extends base_controller_1.BaseController {
             const result = joi_1.default.validate(req.body, user_validation_1.updateSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
                 var myquery = req.body.loginuser.is_admin ? { _id: req.body._id } : { _id: req.body.loginuser._id };
                 if (req.file) {
+                    console.log("reqfile");
                     console.log(req.file);
                     user_model_1.users.updateOne(myquery, { profile_image: req.file.path }, (err, results) => {
                     });
