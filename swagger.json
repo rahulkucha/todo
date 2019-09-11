@@ -359,12 +359,12 @@ paths:
           description: "Invalid ID supplied"
         404:
           description: "Order not found"
-  /user:
+  /user/register:
     post:
       tags:
       - "user"
       summary: "Create user"
-      description: "This can only be done by the logged in user."
+      description: "New user need to register first."
       operationId: "createUser"
       produces:
       - "application/xml"
