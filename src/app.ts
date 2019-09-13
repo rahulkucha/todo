@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import { registerRoutes } from './routes';
 import { options } from 'joi';
 import swaggerUi from 'swagger-ui-express';
-import * as swaggerDocument from './swagger.json';
+import * as swaggerDocument from '../swagger.json';
 
 const app = express();
 const port = 3000;
@@ -26,7 +26,7 @@ class App {
   private middleware(): void {
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
-    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    this.app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   }
 
   private setupRoutes(): void {

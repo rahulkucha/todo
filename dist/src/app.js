@@ -14,7 +14,7 @@ const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const routes_1 = require("./routes");
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
-const swaggerDocument = __importStar(require("./swagger.json"));
+const swaggerDocument = __importStar(require("../swagger.json"));
 const app = express_1.default();
 const port = 3000;
 class App {
