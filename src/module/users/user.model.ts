@@ -13,6 +13,6 @@ const userSchema = new mongoose.Schema({
     updated_by: { type: String }
 });
 
-var users = mongoose.model('users', userSchema);
+var users = mongoose.model("users", userSchema);
 
 export { users };

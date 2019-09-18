@@ -16,6 +16,6 @@ const userSchema = new mongoose_1.default.Schema({
     updated_at: { type: Date, default: Date.now },
     updated_by: { type: String }
 });
-var users = mongoose_1.default.model('users', userSchema);
+var users = mongoose_1.default.model("users", userSchema);
 exports.users = users;
 //# sourceMappingURL=user.model.js.map

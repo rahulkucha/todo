@@ -13,16 +13,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const multer_1 = __importDefault(require("multer"));
-var nodemailer = require('nodemailer');
-class verifyToken {
+var nodemailer = require("nodemailer");
+class VerifyToken {
     constructor() {
     }
     verify_Token(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const bearerHeader = req.headers['authorization'];
-            if (typeof bearerHeader !== 'undefined') {
+            const bearerHeader = req.headers["authorization"];
+            if (typeof bearerHeader !== "undefined") {
                 const bearerToken = bearerHeader;
-                const temp = yield jsonwebtoken_1.default.verify(bearerToken, 'secretkey', (err, authData) => {
+                yield jsonwebtoken_1.default.verify(bearerToken, "secretkey", (err, authData) => {
                     if (err) {
                         res.sendStatus(403);
                     }
@@ -35,19 +35,6 @@ class verifyToken {
             else {
                 res.sendStatus(403);
             }
-        });
-    }
-    getStorage() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield multer_1.default.diskStorage({
-                destination: function (req, file, cb) {
-                    cb(null, './uploads/');
-                },
-                filename: function (req, file, cb) {
-                    var timestamp = Date.now();
-                    cb(null, timestamp + file.originalname);
-                }
-            });
         });
     }
     verify_Admin(req, res, next) {
@@ -66,7 +53,7 @@ class verifyToken {
         return multer_1.default({
             storage: multer_1.default.diskStorage({
                 destination: function (req, file, cb) {
-                    cb(null, './uploads/');
+                    cb(null, "./uploads/");
                 },
                 filename: function (req, file, cb) {
                     var timestamp = Date.now();
@@ -75,43 +62,44 @@ class verifyToken {
             })
         });
     }
-    fileFilter(req, file, cb) {
-        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg' || file.mimetype === 'image/png') {
+    static fileFilter(req, file, cb) {
+        console.log(file.mimetype);
+        if (file.mimetype === ".jpeg" || file.mimetype === ".jpg" || file.mimetype === ".png") {
             cb(null, true);
         }
         else {
-            cb(new Error('Invalid file format'), false);
+            cb(new Error("Invalid file format"), false);
         }
     }
     sentMail() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("sentMail");
             var transporter = nodemailer.createTransport({
-                service: 'gmail',
+                service: "gmail",
                 auth: {
-                    user: 'rahulkucha@gmail.com',
-                    pass: ''
+                    user: "rahulkucha@gmail.com",
+                    pass: ""
                 }
             });
             var mailOptions = {
-                from: 'rahulkucha@gmail.com',
-                to: 'rahulkucha@gmail.com',
-                subject: 'Sending Email using Node.js',
-                text: 'New mail arrived !!!'
+                from: "rahulkucha@gmail.com",
+                to: "rahulkucha@gmail.com",
+                subject: "Sending Email using Node.js",
+                text: "New mail arrived !!!"
             };
             transporter.sendMail(mailOptions, function (error, info) {
                 if (error) {
                     console.log(error);
                 }
                 else {
-                    console.log('Email sent: ' + info.response);
+                    console.log("Email sent: " + info.response);
                 }
             });
         });
     }
 }
-exports.default = verifyToken;
-exports.verifyToken = verifyToken;
-var obj = new verifyToken();
+exports.default = VerifyToken;
+exports.VerifyToken = VerifyToken;
+var obj = new VerifyToken();
 exports.obj = obj;
 //# sourceMappingURL=helper.js.map

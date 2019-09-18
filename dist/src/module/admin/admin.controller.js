@@ -6,6 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 exports.index = (req, res) => {
     //res.render("home", {title: "Home"});
-    res.send('The sedulous hyena ate the antelope!');
+    res.send("The sedulous hyena ate the antelope!");
 };
 //# sourceMappingURL=admin.controller.js.map

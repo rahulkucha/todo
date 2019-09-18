@@ -39,7 +39,7 @@
                     "users"
                 ],
                 "summary": "New user must register first",
-                "description": "New user should not be able to register with same emailId by which some other user has already registered",
+                "description": "New user should NOT be able to register with same email-Id by which some other user has already registered",
                 "operationId": "addPet",
                 "consumes": [
                     "application/json",
@@ -53,7 +53,10 @@
                         "in": "body",
                         "name": "body",
                         "description": "User details which need to be stored",
-                        "required": true
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/registerSchema"
+                        }
                     }
                 ],
                 "responses": {
@@ -88,7 +91,10 @@
                         "in": "body",
                         "name": "body",
                         "description": "user must enter valid email & password to login",
-                        "required": true
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/userSchema"
+                        }
                     }
                 ],
                 "responses": {
@@ -123,7 +129,10 @@
                         "in": "body",
                         "name": "body",
                         "description": "User details which need to be stored",
-                        "required": true
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/registerSchema"
+                        }
                     }
                 ],
                 "responses": {
@@ -198,7 +207,10 @@
                         "in": "body",
                         "name": "body",
                         "description": "Updated user object",
-                        "required": true
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/updateSchema"
+                        }
                     }
                 ],
                 "responses": {
@@ -207,6 +219,24 @@
                     },
                     "404": {
                         "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/user/inactive/": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "view inactive users",
+                "description": "view inactive users based on is_admin",
+                "operationId": "is_admin1",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "listing of all the inactive users to admin"
                     }
                 }
             }
@@ -217,7 +247,7 @@
                     "tasks"
                 ],
                 "summary": "Add new task",
-                "description": "New task",
+                "description": "New task to be added",
                 "operationId": "user_id",
                 "consumes": [
                     "application/json"
@@ -229,38 +259,261 @@
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "User details which need to be stored",
-                        "required": true
+                        "description": "task details which need to be stored",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/taskSchema"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "New user added successfully by admin"
+                        "description": "New task added successfully"
                     },
                     "405": {
                         "description": "Validation exception"
                     }
                 }
             },
+            "delete": {
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Delete a task based on its sub todos",
+                "description": "if any of the todo of an particular task is completed then task should not be deleted.",
+                "operationId": "_ids",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "task id to delete",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of deleted tasks"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "update task based on is_admin",
+                "description": "task details to be updated.",
+                "operationId": "task_id",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "body",
+                        "description": "name that need to be updated",
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "body",
+                        "description": "task description that need to be updated",
+                        "type": "string"
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "body",
+                        "description": "make task inactive",
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "Updated task object",
+                        "schema": {
+                            "$ref": "#/definitions/updateTask"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid task_id supplied"
+                    },
+                    "405": {
+                        "description": "Validation exception"
+                    }
+                }
+            }
+        },
+        "/task/view/": {
             "get": {
                 "tags": [
                     "tasks"
                 ],
-                "summary": "view user details",
-                "description": "view users based on is_admin",
-                "operationId": "is_admins",
+                "summary": "get list of task with their todos",
+                "description": "get list of tasks based on is_admin",
+                "operationId": "is_admins2",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "listing of tasks",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/taskSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of tasks"
+                    }
+                }
+            }
+        },
+        "/task/completed/": {
+            "get": {
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "view completed tasks based on is_admin",
+                "description": "view tasks based on todos status",
+                "operationId": "status",
                 "produces": [
                     "application/json"
                 ],
                 "responses": {
                     "200": {
-                        "description": "listing of all the users"
+                        "description": "listing of all the completed tasks"
+                    }
+                }
+            }
+        },
+        "/task/pending/": {
+            "get": {
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "view pending tasks based on is_admin",
+                "description": "view pending tasks",
+                "operationId": "is_deleted1",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "listing of all the pending tasks"
+                    }
+                }
+            }
+        },
+        "/task/deleted/": {
+            "get": {
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "view deleted tasks based on is_admin",
+                "description": "view tasks based on is_deleted",
+                "operationId": "is_deleted",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "listing of all the deleted tasks"
+                    }
+                }
+            }
+        },
+        "/task/inactive/": {
+            "post": {
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "make task inactive",
+                "description": "only those tasks can be made inactive whose all todos are completed",
+                "operationId": "tasks_id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "task id which need to be made inactive",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/taskSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of inactive tasks"
+                    },
+                    "405": {
+                        "description": "Validation exception"
+                    }
+                }
+            }
+        },
+        "/todo/": {
+            "post": {
+                "tags": [
+                    "todos"
+                ],
+                "summary": "Add new todo for particular task",
+                "description": "New todo",
+                "operationId": "task_id1",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "description": "todo name to be stored",
+                        "required": true
+                    },
+                    {
+                        "name": "description",
+                        "description": "todo description to be stored",
+                        "required": true
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "details of newly added todo",
+                        "schema": {
+                            "$ref": "#/definitions/todoSchema"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "New todo added successfully"
+                    },
+                    "405": {
+                        "description": "Validation exception"
                     }
                 }
             },
             "delete": {
                 "tags": [
-                    "tasks"
+                    "todos"
                 ],
                 "summary": "Delete a user",
                 "description": "",
@@ -284,7 +537,7 @@
             },
             "put": {
                 "tags": [
-                    "tasks"
+                    "todos"
                 ],
                 "summary": "Updated user",
                 "description": "This can only be done by the logged in user.",
@@ -305,7 +558,10 @@
                         "in": "body",
                         "name": "body",
                         "description": "Updated user object",
-                        "required": true
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/updateTodo"
+                        }
                     }
                 ],
                 "responses": {
@@ -318,14 +574,78 @@
                 }
             }
         },
-        "/todo/": {
-            "post": {
+        "/todo/view/": {
+            "get": {
                 "tags": [
                     "todos"
                 ],
-                "summary": "Add new task",
-                "description": "New task",
-                "operationId": "user_id",
+                "summary": "view todos based on task_id",
+                "description": "view todos details",
+                "operationId": "tasks_id1",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id3",
+                        "description": "task_id to which todos belong"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "list of all todos for particular task",
+                        "schema": {
+                            "$ref": "#/definitions/updateTodo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "listing of all the todos"
+                    }
+                }
+            }
+        },
+        "/todo/completed/": {
+            "get": {
+                "tags": [
+                    "todos"
+                ],
+                "summary": "view todos based on status",
+                "description": "view todos details",
+                "operationId": "tasks_id3",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "description": "task_id to which todos belong"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "list of all completed todos for particular task",
+                        "schema": {
+                            "$ref": "#/definitions/updateTodo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "listing of all the todos"
+                    }
+                }
+            }
+        },
+        "/todo/pending/": {
+            "get": {
+                "tags": [
+                    "todos"
+                ],
+                "summary": "view todos based on status",
+                "description": "view todos details",
+                "operationId": "tasks_id5",
                 "consumes": [
                     "application/json"
                 ],
@@ -334,94 +654,320 @@
                 ],
                 "parameters": [
                     {
+                        "name": "task_id",
+                        "description": "task_id to which todos belong"
+                    },
+                    {
                         "in": "body",
                         "name": "body",
-                        "description": "User details which need to be stored",
-                        "required": true
+                        "description": "list of all completed todos for particular task",
+                        "schema": {
+                            "$ref": "#/definitions/updateTodo"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "New user added successfully by admin"
-                    },
-                    "405": {
-                        "description": "Validation exception"
+                        "description": "listing of all the todos"
                     }
                 }
-            },
+            }
+        },
+        "/todo/deleted/": {
             "get": {
                 "tags": [
                     "todos"
                 ],
-                "summary": "view user details",
-                "description": "view users based on is_admin",
-                "operationId": "is_admins",
-                "produces": [
+                "summary": "view todos based on is_deleted",
+                "description": "view todos details",
+                "operationId": "tasks_id6",
+                "consumes": [
                     "application/json"
                 ],
-                "responses": {
-                    "200": {
-                        "description": "listing of all the users"
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "todos"
-                ],
-                "summary": "Delete a user",
-                "description": "",
-                "operationId": "_id",
                 "produces": [
                     "application/json"
                 ],
                 "parameters": [
                     {
-                        "name": "_id",
-                        "in": "body",
-                        "description": "user id to delete",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "list of users"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "todos"
-                ],
-                "summary": "Updated user",
-                "description": "This can only be done by the logged in user.",
-                "operationId": "updateUser",
-                "produces": [
-                    "application/xml",
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "name": "username",
-                        "in": "path",
-                        "description": "name that need to be updated",
-                        "required": true,
-                        "type": "string"
+                        "name": "task_id",
+                        "description": "task_id to which todos belong"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "Updated user object",
-                        "required": true
+                        "description": "list of all deleted todos",
+                        "schema": {
+                            "$ref": "#/definitions/updateTodo"
+                        }
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Invalid user supplied"
-                    },
-                    "404": {
-                        "description": "User not found"
+                    "200": {
+                        "description": "listing of all the todos"
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "userSchema": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "profile_image": {
+                    "type": "string",
+                    "default": null
+                },
+                "created_at": {
+                    "type": "string",
+                    "default": "Date.now"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "default": "Date.now"
+                },
+                "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "registerSchema": {
+            "type": "object",
+            "required": [
+                "name",
+                "email",
+                "password"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "is_admin": {
+                    "type": "boolean",
+                    "default": false
+                }
+            }
+        },
+        "updateSchema": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "format": "string"
+                },
+                "is_admin": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "profile_image": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string",
+                    "default": "Date.now"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "default": "Date.now"
+                },
+                "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "taskSchema": {
+            "type": "object",
+            "required": [
+                "name",
+                "description"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "is_deleted": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string",
+                    "default": "Date.now"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "default": "Date.now"
+                },
+                "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "updateTask": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "todoSchema": {
+            "type": "object",
+            "required": [
+                "name",
+                "description"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "is_deleted": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "tasks": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "created_at": {
+                    "type": "string",
+                    "default": "Date.now"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "default": "Date.now"
+                },
+                "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "updateTodo": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_deleted": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "boolean"
                 }
             }
         }

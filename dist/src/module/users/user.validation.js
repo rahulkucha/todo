@@ -37,6 +37,6 @@ exports.updateSchema = joi_1.default.object().keys({
     updated_at: joi_1.default.number().integer(),
     updated_by: joi_1.default.string().trim().regex(/^[a-zA-Z]{3,10}$/),
     loginuser: joi_1.default.any(),
-    _id: joi_1.default.any().required()
+    _id: joi_1.default.any()
 });
 //# sourceMappingURL=user.validation.js.map

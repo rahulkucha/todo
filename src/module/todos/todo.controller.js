@@ -4,9 +4,9 @@ var TodoController = (function () {
     }
     TodoController.prototype.index = function (req, res) {
         //res.render("home", {title: "Home"});
-        res.send('Home page !!!');
+        res.send("Home page !!!");
     };
-    ;
+    
     return TodoController;
 })();
 exports["default"] = TodoController;

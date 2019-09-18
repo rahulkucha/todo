@@ -15,7 +15,6 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const routes_1 = require("./routes");
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const swaggerDocument = __importStar(require("../swagger.json"));
-const app = express_1.default();
 const port = 3000;
 class App {
     constructor() {
@@ -32,7 +31,13 @@ class App {
     middleware() {
         this.app.use(body_parser_1.default.json());
         this.app.use(body_parser_1.default.urlencoded({ extended: true }));
-        this.app.use('/swagger', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
+        this.app.use("/swagger", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
+        this.app.use((req, res, next) => {
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, credentials, withCredentials");
+            res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+            next();
+        });
     }
     setupRoutes() {
         routes_1.registerRoutes(this.app);

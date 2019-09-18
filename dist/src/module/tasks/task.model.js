@@ -15,11 +15,11 @@ const taskSchema = new mongoose_1.default.Schema({
     updated_at: { type: Date, default: Date.now },
     updated_by: { type: String },
 }, { toJSON: { virtuals: true } });
-taskSchema.virtual('todolist', {
-    ref: 'todos',
-    localField: '_id',
-    foreignField: 'tasks'
+taskSchema.virtual("todolist", {
+    ref: "todos",
+    localField: "_id",
+    foreignField: "tasks"
 });
-var tasks = mongoose_1.default.model('tasks', taskSchema);
+var tasks = mongoose_1.default.model("tasks", taskSchema);
 exports.tasks = tasks;
 //# sourceMappingURL=task.model.js.map

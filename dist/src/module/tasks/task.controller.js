@@ -17,30 +17,30 @@ const helper_1 = require("../../helper/helper");
 const task_validation_1 = require("./task.validation");
 const joi_1 = __importDefault(require("joi"));
 const todo_model_1 = require("../todos/todo.model");
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/todo', { useNewUrlParser: true });
+var mongoose = require("mongoose");
+mongoose.connect("mongodb://localhost/todo", { useNewUrlParser: true });
 class taskController extends base_controller_1.BaseController {
     constructor() {
         super();
         this.init();
     }
     register(express) {
-        express.use('/task', this.router);
+        express.use("/task", this.router);
     }
     init() {
-        this.router.post('/', helper_1.obj.verify_Token, this.taskInsert);
-        this.router.post('/view', helper_1.obj.verify_Token, this.taskView);
-        this.router.post('/inactive', helper_1.obj.verify_Token, this.taskInActive);
-        this.router.get('/deleted', helper_1.obj.verify_Token, this.deletedTaskView);
-        this.router.get('/completed', helper_1.obj.verify_Token, this.completedTaskView);
-        this.router.post('/pending', helper_1.obj.verify_Token, this.pendingTaskView);
-        this.router.delete('/', helper_1.obj.verify_Token, this.taskDelete);
-        this.router.put('/', helper_1.obj.verify_Token, this.taskUpdate);
+        this.router.post("/", helper_1.obj.verify_Token, this.taskInsert);
+        this.router.get("/view", helper_1.obj.verify_Token, this.taskView);
+        this.router.post("/inactive", helper_1.obj.verify_Token, this.taskInActive);
+        this.router.get("/deleted", helper_1.obj.verify_Token, this.deletedTaskView);
+        this.router.get("/completed", helper_1.obj.verify_Token, this.completedTaskView);
+        this.router.get("/pending", helper_1.obj.verify_Token, this.pendingTaskView);
+        this.router.delete("/", helper_1.obj.verify_Token, this.taskDelete);
+        this.router.put("/", helper_1.obj.verify_Token, this.taskUpdate);
     }
-    taskInsert(req, res, next) {
+    taskInsert(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("taskInsert");
-            const result = joi_1.default.validate(req.body, task_validation_1.taskSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
+            joi_1.default.validate(req.body, task_validation_1.taskSchema).then(() => __awaiter(this, void 0, void 0, function* () {
                 var createdBy = req.body.loginuser.is_admin ? "admin" : "user";
                 var updatedBy = req.body.loginuser.is_admin ? "admin" : "user";
                 var user_id = req.body.user_id ? req.body.user_id : req.body.loginuser._id;
@@ -62,13 +62,13 @@ class taskController extends base_controller_1.BaseController {
             if (admin) {
                 console.log("admin");
                 var query = { is_deleted: true };
-                var deltask = yield task_model_1.tasks.find(query).populate('todolist');
+                var deltask = yield task_model_1.tasks.find(query).populate("todolist");
                 res.send(deltask);
             }
             else {
                 console.log("user");
                 var queries = { user_id: req.body.loginuser._id, is_deleted: true };
-                var deltask = yield task_model_1.tasks.find(queries).populate('todolist');
+                var deltask = yield task_model_1.tasks.find(queries).populate("todolist");
                 res.send(deltask);
             }
         });
@@ -79,7 +79,7 @@ class taskController extends base_controller_1.BaseController {
             var admin = req.body.loginuser.is_admin;
             if (admin) {
                 console.log("admin");
-                const task = yield task_model_1.tasks.find().populate({ path: 'todolist', match: { status: true } }).exec(function (err, results) {
+                yield task_model_1.tasks.find().populate({ path: "todolist", match: { status: true, is_deleted: false } }).exec(function (err, results) {
                     var taskarr = [];
                     results.forEach(function (task) {
                         if (task.todolist.length > 0) {
@@ -91,7 +91,7 @@ class taskController extends base_controller_1.BaseController {
             }
             else {
                 console.log("user");
-                const task = yield task_model_1.tasks.find({ user_id: req.body.loginuser._id, is_deleted: false }).populate({ path: 'todolist', match: { status: true } }).exec(function (err, results) {
+                yield task_model_1.tasks.find({ user_id: req.body.loginuser._id, is_deleted: false }).populate({ path: "todolist", match: { status: true, is_deleted: false } }).exec(function (err, results) {
                     var taskarr = [];
                     results.forEach(function (task) {
                         if (task.todolist.length > 0) {
@@ -109,7 +109,7 @@ class taskController extends base_controller_1.BaseController {
             var admin = req.body.loginuser.is_admin;
             if (admin) {
                 console.log("admin");
-                const task = yield task_model_1.tasks.find().populate({ path: 'todolist', match: { status: false } }).exec(function (err, results) {
+                yield task_model_1.tasks.find().populate({ path: "todolist", match: { status: false, is_deleted: false } }).exec(function (err, results) {
                     var taskarr = [];
                     results.forEach(function (task) {
                         if (task.todolist.length > 0) {
@@ -121,7 +121,7 @@ class taskController extends base_controller_1.BaseController {
             }
             else {
                 console.log("user");
-                const task = yield task_model_1.tasks.find({ user_id: req.body.loginuser._id, is_deleted: false }).populate({ path: 'todolist', match: { status: false } }).exec(function (err, results) {
+                yield task_model_1.tasks.find({ user_id: req.body.loginuser._id, is_deleted: false }).populate({ path: "todolist", match: { status: false, is_deleted: false } }).exec(function (err, results) {
                     var taskarr = [];
                     results.forEach(function (task) {
                         if (task.todolist.length > 0) {
@@ -140,26 +140,29 @@ class taskController extends base_controller_1.BaseController {
             if (admin) {
                 console.log("admin");
                 var query = { is_deleted: false };
-                task_model_1.tasks.find(query, function (err, result) {
+                var todoarr = [];
+                task_model_1.tasks.find(query, yield function (err, result) {
                     res.send(result);
-                }).populate('todolist');
+                }).populate({ path: 'todolist', match: { is_deleted: false } });
             }
             else {
                 console.log("user");
                 var queries = { user_id: req.body.loginuser._id, is_deleted: false };
                 task_model_1.tasks.find(queries, function (err, result) {
                     res.send(result);
-                }).populate('todolist');
+                }).populate({ path: 'todolist', match: { is_deleted: false } });
             }
         });
     }
     taskDelete(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("taskDelete");
-            var checkTodo = yield todo_model_1.todos.find({ tasks: req.body._id, is_deleted: false, status: true }, function (err, result) {
-            });
-            var checkTodos = yield todo_model_1.todos.find({ tasks: req.body._id, is_deleted: false, status: false }, function (err, result) {
-            });
+            var checkTodo = yield todo_model_1.todos.find({ tasks: req.body._id, is_deleted: false, status: true });
+            //, function (err, result) {
+            //});
+            var checkTodos = yield todo_model_1.todos.find({ tasks: req.body._id, is_deleted: false, status: false });
+            //, function (err, result) {
+            //});
             if (checkTodo.length > 0 && checkTodos.length > 0) {
                 res.send("Task cannot be deleted since some todo of this task is completed");
             }
@@ -175,12 +178,13 @@ class taskController extends base_controller_1.BaseController {
     taskUpdate(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("taskUpdate");
-            const result = joi_1.default.validate(req.body, task_validation_1.updateTask).then((data) => __awaiter(this, void 0, void 0, function* () {
+            joi_1.default.validate(req.body, task_validation_1.updateTask).then(() => __awaiter(this, void 0, void 0, function* () {
                 var updatedBy = req.body.loginuser.is_admin ? "admin" : "user";
                 req.body.updated_by = updatedBy;
                 var myquery = { _id: req.body._id };
-                var updates = task_model_1.tasks.updateOne(myquery, req.body, (err, results) => {
-                });
+                var updates = yield task_model_1.tasks.updateOne(myquery, req.body);
+                // , (err, results) => {
+                // });
                 if (updates) {
                     res.send("Task updated successfully");
                 }
@@ -192,14 +196,14 @@ class taskController extends base_controller_1.BaseController {
     taskInActive(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("taskInActive");
-            const result = joi_1.default.validate(req.body, task_validation_1.updateTask).then((data) => __awaiter(this, void 0, void 0, function* () {
+            joi_1.default.validate(req.body, task_validation_1.updateTask).then((data) => __awaiter(this, void 0, void 0, function* () {
                 const todos1 = yield todo_model_1.todos.find({ tasks: data._id, status: false }).count();
                 if (todos1 > 0) {
                     res.send("Cannot make this task inactive,since some todos of this task are pending");
                 }
                 else {
-                    const todos1 = yield todo_model_1.todos.findOneAndUpdate({ tasks: data._id }, { $set: { is_active: false } });
-                    res.send(todos1);
+                    var update = yield task_model_1.tasks.updateOne({ _id: data._id }, { $set: { is_active: false } });
+                    res.send("Task made inactive successfully");
                 }
             })).catch((e) => {
                 res.send(e.details[0].message);

@@ -16,29 +16,30 @@ const todo_model_1 = require("./todo.model");
 const todo_validation_1 = require("./todo.validation");
 const joi_1 = __importDefault(require("joi"));
 const helper_1 = require("../../helper/helper");
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/todo', { useNewUrlParser: true });
+const task_model_1 = require("../tasks/task.model");
+var mongoose = require("mongoose");
+mongoose.connect("mongodb://localhost/todo", { useNewUrlParser: true });
 class todoController extends base_controller_1.BaseController {
     constructor() {
         super();
         this.init();
     }
     register(express) {
-        express.use('/todo', this.router);
+        express.use("/todo", this.router);
     }
     init() {
-        this.router.post('/', helper_1.obj.verify_Token, this.todoInsert);
-        this.router.post('/view', helper_1.obj.verify_Token, this.todoView);
-        this.router.post('/completed', helper_1.obj.verify_Token, this.completedTodoView);
-        this.router.post('/pending', helper_1.obj.verify_Token, this.pendingTodoView);
-        this.router.post('/deleted', helper_1.obj.verify_Token, this.deletedTodoView);
-        this.router.delete('/', helper_1.obj.verify_Token, this.todoDelete);
-        this.router.put('/', helper_1.obj.verify_Token, this.todoUpdate);
+        this.router.post("/", helper_1.obj.verify_Token, this.todoInsert);
+        this.router.get("/view", helper_1.obj.verify_Token, this.todoView);
+        this.router.get("/completed", helper_1.obj.verify_Token, this.completedTodoView);
+        this.router.get("/pending", helper_1.obj.verify_Token, this.pendingTodoView);
+        this.router.get("/deleted", helper_1.obj.verify_Token, this.deletedTodoView);
+        this.router.delete("/", helper_1.obj.verify_Token, this.todoDelete);
+        this.router.put("/", helper_1.obj.verify_Token, this.todoUpdate);
     }
-    todoInsert(req, res, next) {
+    todoInsert(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("todoInsert");
-            const result = joi_1.default.validate(req.body, todo_validation_1.TodoSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
+            joi_1.default.validate(req.body, todo_validation_1.TodoSchema).then(() => __awaiter(this, void 0, void 0, function* () {
                 var add = yield todo_model_1.todos.insertMany({ name: req.body.name, description: req.body.description, tasks: req.body._id, is_deleted: req.body.is_deleted });
                 if (add) {
                     res.send("New todo added successfully");
@@ -53,19 +54,28 @@ class todoController extends base_controller_1.BaseController {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("todoView");
             var admin = req.body.loginuser.is_admin;
+            var id = req.body.loginuser._id;
             if (admin) {
                 console.log("admin");
-                var query = { is_deleted: false };
-                todo_model_1.todos.find(query, function (err, result) {
-                    res.send(result);
-                });
+                var queries1 = { is_deleted: false };
+                var todoarr = [];
+                task_model_1.tasks.find(queries1, function (err, result) {
+                    result.forEach(function (todo) {
+                        todoarr.push(...todo.todolist);
+                    });
+                    res.send(todoarr);
+                }).populate("todolist").select("todolist");
             }
             else {
                 console.log("user");
-                var queries = { tasks: req.body._id, is_deleted: false };
-                todo_model_1.todos.find(queries, function (err, result) {
-                    res.send(result);
-                });
+                var queries = { user_id: id, is_deleted: false };
+                var todoarr = [];
+                task_model_1.tasks.find(queries, function (err, result) {
+                    result.forEach(function (todo) {
+                        todoarr.push(...todo.todolist);
+                    });
+                    res.send(todoarr);
+                }).populate("todolist").select("todolist");
             }
         });
     }
@@ -141,10 +151,11 @@ class todoController extends base_controller_1.BaseController {
     todoUpdate(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("todoUpdate");
-            const result = joi_1.default.validate(req.body, todo_validation_1.updateSchema).then((data) => __awaiter(this, void 0, void 0, function* () {
+            joi_1.default.validate(req.body, todo_validation_1.updateSchema).then(() => __awaiter(this, void 0, void 0, function* () {
                 var myquery = { _id: req.body._id };
-                var updates = todo_model_1.todos.updateOne(myquery, req.body, (err, results) => {
-                });
+                var updates = yield todo_model_1.todos.updateOne(myquery, req.body);
+                // , (err, results) => {
+                // });
                 if (updates) {
                     res.send("Todo updated successfully");
                 }

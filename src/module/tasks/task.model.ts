@@ -1,5 +1,4 @@
-import mongoose, { Schema } from "mongoose";
-import { todos } from "../todos/todo.model";
+import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -15,12 +14,12 @@ const taskSchema = new mongoose.Schema({
 
 
 
-taskSchema.virtual('todolist', {
-  ref: 'todos',
-  localField: '_id',
-  foreignField: 'tasks'
+taskSchema.virtual("todolist", {
+  ref: "todos",
+  localField: "_id",
+  foreignField: "tasks"
 });
 
-var tasks = mongoose.model('tasks', taskSchema);
+var tasks = mongoose.model("tasks", taskSchema);
 
 export { tasks };

@@ -1,11 +1,9 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import { registerRoutes } from './routes';
-import { options } from 'joi';
-import swaggerUi from 'swagger-ui-express';
-import * as swaggerDocument from '../swagger.json';
+import express from "express";
+import bodyParser from "body-parser";
+import { registerRoutes } from "./routes";
+import swaggerUi from "swagger-ui-express";
+import * as swaggerDocument from "../swagger.json";
 
-const app = express();
 const port = 3000;
 
 class App {
@@ -26,7 +24,14 @@ class App {
   private middleware(): void {
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
-    this.app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    this.app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+    this.app.use((req, res, next) => {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, credentials, withCredentials");
+      res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+      next();
+    });
   }
 
   private setupRoutes(): void {

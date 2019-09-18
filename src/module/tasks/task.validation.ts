@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi from "joi";
 
 export const taskSchema = Joi.object().keys({
     name: Joi.string().trim().regex(/^[a-zA-Z0-9]{3,10}$/).required(),
